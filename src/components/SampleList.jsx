@@ -124,24 +124,20 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
       }
     }
 
-    // Build flat list with depth info
+    // Recursively build flat list with depth info
     const items = []
-    for (const root of roots) {
-      const children = childrenMap[root.id] || []
+    const addNode = (sample, depth) => {
+      const children = childrenMap[sample.id] || []
       const hasChildren = children.length > 0
-      items.push({ ...root, _depth: 0, _hasChildren: hasChildren, _childCount: children.length })
-      if (hasChildren && !collapsedGroups.has(root.id)) {
+      items.push({ ...sample, _depth: depth, _hasChildren: hasChildren, _childCount: children.length })
+      if (hasChildren && !collapsedGroups.has(sample.id)) {
         for (const child of children) {
-          // Also check if this child has grandchildren
-          const grandchildren = childrenMap[child.id] || []
-          items.push({ ...child, _depth: 1, _hasChildren: grandchildren.length > 0, _childCount: grandchildren.length })
-          if (grandchildren.length > 0 && !collapsedGroups.has(child.id)) {
-            for (const gc of grandchildren) {
-              items.push({ ...gc, _depth: 2, _hasChildren: false, _childCount: 0 })
-            }
-          }
+          addNode(child, depth + 1)
         }
       }
+    }
+    for (const root of roots) {
+      addNode(root, 0)
     }
     return items
   }, [filteredSamples, collapsedGroups])
@@ -472,6 +468,11 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                       sample.requestDetail || ''
                     )}
                   </div>
+                  {sample._depth === 0 && sample.requestDetail && (
+                    <div className="text-text-sub text-xs mt-1 line-clamp-2">
+                      {sample.requestDetail}
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   {sample._depth === 0 && sample._hasChildren && (
