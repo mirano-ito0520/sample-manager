@@ -1,6 +1,23 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
 
 const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '対応不可']
+
+const CSV_COLUMNS = [
+  { key: 'status', label: 'ステータス' },
+  { key: 'requestDate', label: '依頼日' },
+  { key: 'manufacturer', label: 'メーカー' },
+  { key: 'brand', label: 'ブランド' },
+  { key: 'projectName', label: 'プロジェクト名' },
+  { key: 'sampleName', label: 'サンプル名' },
+  { key: 'requestDetail', label: '依頼内容' },
+  { key: 'salesTarget', label: '販売先' },
+  { key: 'factoryName', label: '製造会社' },
+  { key: 'receiveDate', label: '受取日' },
+  { key: 'quantity', label: '本数' },
+  { key: 'ingredientList', label: '全成分表示' },
+  { key: 'estimate', label: '見積' },
+  { key: 'note', label: '備考' },
+]
 
 const STATUS_STYLES = {
   '未到着': 'bg-danger-bg text-danger',
@@ -102,6 +119,42 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
     }
   }
 
+  const exportCsv = useCallback(() => {
+    if (filteredSamples.length === 0) return
+
+    const escCsv = (val) => {
+      const s = String(val ?? '')
+      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
+        return `"${s.replace(/"/g, '""')}"`
+      }
+      return s
+    }
+
+    const header = CSV_COLUMNS.map(c => c.label).join(',')
+    const rows = filteredSamples.map(sample =>
+      CSV_COLUMNS.map(c => escCsv(sample[c.key])).join(',')
+    )
+    const bom = '\uFEFF'
+    const csv = bom + header + '\n' + rows.join('\n')
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const now = new Date()
+    const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
+    const filterLabel = [
+      statusFilter !== '全て' ? statusFilter : '',
+      manufacturerFilter !== '全て' ? manufacturerFilter : '',
+      brandFilter !== '全て' ? brandFilter : '',
+    ].filter(Boolean).join('_')
+    a.download = `サンプル一覧_${filterLabel || '全件'}_${ts}.csv`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, [filteredSamples, statusFilter, manufacturerFilter, brandFilter])
+
   return (
     <div className="space-y-4 animate-fade-in">
       {/* Filter bar */}
@@ -181,6 +234,17 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
               }`}
             >
               受取日{sortKey === 'receiveDate' ? (sortAsc ? '↑' : '↓') : ''}
+            </button>
+            <button
+              onClick={exportCsv}
+              disabled={filteredSamples.length === 0}
+              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                filteredSamples.length === 0
+                  ? 'border-border text-text-muted cursor-not-allowed'
+                  : 'border-success text-success bg-success-bg hover:bg-success/20'
+              }`}
+            >
+              CSV出力
             </button>
           </div>
         </div>
