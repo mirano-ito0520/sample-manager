@@ -1,16 +1,19 @@
 import { useMemo } from 'react'
 
 function Dashboard({ samples }) {
+  const activeSamples = useMemo(() => samples.filter(s => s.status !== 'アーカイブ'), [samples])
+  const archivedCount = samples.length - activeSamples.length
+
   const stats = useMemo(() => {
-    const notArrived = samples.filter(s => s.status === '未到着').length
-    const preparing = samples.filter(s => s.status === '依頼準備中').length
-    const arrived = samples.filter(s => s.status === '到着済').length
-    const total = samples.length
+    const notArrived = activeSamples.filter(s => s.status === '未到着').length
+    const preparing = activeSamples.filter(s => s.status === '依頼準備中').length
+    const arrived = activeSamples.filter(s => s.status === '到着済').length
+    const total = activeSamples.length
     return { notArrived, preparing, arrived, total }
-  }, [samples])
+  }, [activeSamples])
 
   const recentSamples = useMemo(() => {
-    return samples
+    return activeSamples
       .filter(s => s.status === '未到着' || s.status === '依頼準備中')
       .sort((a, b) => {
         if (!a.requestDate && !b.requestDate) return 0
@@ -23,7 +26,7 @@ function Dashboard({ samples }) {
 
   const manufacturerSummary = useMemo(() => {
     const map = {}
-    samples
+    activeSamples
       .filter(s => s.status === '未到着')
       .forEach(s => {
         const name = s.manufacturer || '(未設定)'
@@ -57,7 +60,12 @@ function Dashboard({ samples }) {
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="text-2xl mb-1">📦</div>
             <div className="text-text-main text-2xl font-bold">{stats.total}</div>
-            <div className="text-text-sub text-sm">全サンプル</div>
+            <div className="text-text-sub text-sm">
+              アクティブ
+              {archivedCount > 0 && (
+                <span className="text-text-muted ml-1">(+{archivedCount}保留)</span>
+              )}
+            </div>
           </div>
         </div>
       </section>

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 
-const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '対応不可']
+const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '対応不可', 'アーカイブ']
 
 const CSV_COLUMNS = [
   { key: 'status', label: 'ステータス' },
@@ -24,6 +24,7 @@ const STATUS_STYLES = {
   '依頼準備中': 'bg-warn-bg text-warn',
   '到着済': 'bg-success-bg text-success',
   '対応不可': 'bg-card text-text-muted',
+  'アーカイブ': 'bg-card text-text-muted opacity-60',
 }
 
 function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
@@ -63,7 +64,10 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
   const filteredSamples = useMemo(() => {
     let result = [...samples]
 
-    if (statusFilter !== '全て') {
+    if (statusFilter === '全て') {
+      // デフォルトではアーカイブを非表示
+      result = result.filter(s => s.status !== 'アーカイブ')
+    } else {
       result = result.filter(s => s.status === statusFilter)
     }
     if (manufacturerFilter !== '全て') {
@@ -309,6 +313,21 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                           到着
                         </button>
                       )}
+                      {sample.status !== 'アーカイブ' ? (
+                        <button
+                          onClick={() => onStatusChange(sample.id, { status: 'アーカイブ' })}
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-card text-text-muted hover:bg-card-hover transition-colors border border-border"
+                        >
+                          保留
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => onStatusChange(sample.id, { status: '未到着' })}
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          復元
+                        </button>
+                      )}
                       <button
                         onClick={() => onEdit(sample)}
                         className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
@@ -340,7 +359,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
           filteredSamples.map((sample) => (
             <div
               key={sample.id}
-              className="bg-card rounded-xl p-4 space-y-2"
+              className={`bg-card rounded-xl p-4 space-y-2 ${sample.status === 'アーカイブ' ? 'opacity-60' : ''}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
@@ -373,6 +392,21 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                     className="text-xs px-3 py-1.5 rounded-lg bg-success-bg text-success hover:bg-success/20 transition-colors"
                   >
                     到着
+                  </button>
+                )}
+                {sample.status !== 'アーカイブ' ? (
+                  <button
+                    onClick={() => onStatusChange(sample.id, { status: 'アーカイブ' })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-card text-text-muted hover:bg-card-hover transition-colors border border-border"
+                  >
+                    保留
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => onStatusChange(sample.id, { status: '未到着' })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                  >
+                    復元
                   </button>
                 )}
                 <button
