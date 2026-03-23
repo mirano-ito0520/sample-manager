@@ -89,8 +89,7 @@ function ImportPanel({ onImportComplete }) {
         alert('エクスポートするデータがありません。')
         return
       }
-      const cleaned = allSamples.map(({ id, ...rest }) => rest)
-      const json = JSON.stringify(cleaned, null, 2)
+      const json = JSON.stringify(allSamples, null, 2)
       const blob = new Blob([json], { type: 'application/json' })
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

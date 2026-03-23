@@ -124,14 +124,16 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
   }, [samples])
 
   const filteredParentSamples = useMemo(() => {
-    if (!parentSearch.trim()) return samples.slice(0, 20)
+    const currentId = editingSample && !editingSample._isRevision ? editingSample.id : null
+    const candidates = currentId ? samples.filter(s => s.id !== currentId) : samples
+    if (!parentSearch.trim()) return candidates.slice(0, 20)
     const q = parentSearch.trim().toLowerCase()
-    return samples.filter(s =>
+    return candidates.filter(s =>
       (s.sampleName && s.sampleName.toLowerCase().includes(q)) ||
       (s.requestDetail && s.requestDetail.toLowerCase().includes(q)) ||
       (s.brand && s.brand.toLowerCase().includes(q))
     ).slice(0, 20)
-  }, [samples, parentSearch])
+  }, [samples, parentSearch, editingSample])
 
   const resetForm = () => {
     setManufacturer('')

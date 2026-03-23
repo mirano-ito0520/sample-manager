@@ -47,10 +47,8 @@ export async function restoreFromBackupIfNeeded() {
     const items = JSON.parse(raw)
     if (!Array.isArray(items) || items.length === 0) return false
 
-    // Strip id so Dexie auto-generates new ones
-    const cleaned = items.map(({ id, ...rest }) => rest)
-    await db.samples.bulkAdd(cleaned)
-    console.log(`Restored ${cleaned.length} samples from localStorage backup`)
+    await bulkAddSamples(items)
+    console.log(`Restored ${items.length} samples from localStorage backup`)
     return true
   } catch (e) {
     console.warn('Restore from backup failed:', e)
@@ -120,13 +118,35 @@ export async function deleteSample(id) {
 }
 
 export async function bulkAddSamples(samples) {
-  const withStatus = samples.map((s) => ({
-    ...s,
-    status: determineStatus(s),
-  }))
-  await db.samples.bulkAdd(withStatus)
+  // Build old→new ID mapping to preserve parentId links
+  const oldIdMap = {}
+  const toInsert = samples.map((s) => {
+    const oldId = s.id
+    const { id, ...rest } = s
+    const record = { ...rest, status: s.status || determineStatus(rest) }
+    // Store old ID for remapping later
+    if (oldId != null) record._oldId = oldId
+    return record
+  })
+
+  // Insert records one by one to capture new IDs
+  for (const record of toInsert) {
+    const oldId = record._oldId
+    delete record._oldId
+    const newId = await db.samples.add(record)
+    if (oldId != null) oldIdMap[oldId] = newId
+  }
+
+  // Remap parentId references to new IDs
+  const allRecords = await db.samples.toArray()
+  for (const record of allRecords) {
+    if (record.parentId && oldIdMap[record.parentId] != null) {
+      await db.samples.update(record.id, { parentId: oldIdMap[record.parentId] })
+    }
+  }
+
   await backupToLocalStorage()
-  return withStatus.length
+  return toInsert.length
 }
 
 export async function clearAllSamples() {
