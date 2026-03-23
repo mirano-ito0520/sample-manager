@@ -17,6 +17,7 @@ const CSV_COLUMNS = [
   { key: 'ingredientList', label: '全成分表示' },
   { key: 'estimate', label: '見積' },
   { key: 'note', label: '備考' },
+  { key: 'parentId', label: '改良元ID' },
 ]
 
 const STATUS_STYLES = {
@@ -27,13 +28,21 @@ const STATUS_STYLES = {
   'アーカイブ': 'bg-card text-text-muted opacity-60',
 }
 
-function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
+function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevision }) {
   const [statusFilter, setStatusFilter] = useState('全て')
   const [manufacturerFilter, setManufacturerFilter] = useState('全て')
   const [brandFilter, setBrandFilter] = useState('全て')
   const [searchText, setSearchText] = useState('')
   const [sortKey, setSortKey] = useState('requestDate')
   const [sortAsc, setSortAsc] = useState(false)
+
+  const parentMap = useMemo(() => {
+    const map = {}
+    samples.forEach(s => { map[s.id] = s.sampleName || s.requestDetail || '(名称なし)' })
+    return map
+  }, [samples])
+
+  const getParentName = (pid) => parentMap[pid] || '(削除済み)'
 
   const manufacturers = useMemo(() => {
     const set = new Set(samples.map(s => s.manufacturer).filter(Boolean))
@@ -298,8 +307,13 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                   <td className="py-3 px-3 text-sm text-text-sub">
                     {sample.factoryName || '-'}
                   </td>
-                  <td className="py-3 px-3 text-sm text-text-main max-w-[200px] truncate">
-                    {sample.sampleName || '-'}
+                  <td className="py-3 px-3 text-sm text-text-main max-w-[200px]">
+                    <div className="truncate">{sample.sampleName || '-'}</div>
+                    {sample.parentId && (
+                      <div className="text-xs text-accent truncate mt-0.5">
+                        ← {getParentName(sample.parentId)} の改良
+                      </div>
+                    )}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-sub max-w-[200px] truncate">
                     {sample.requestDetail || '-'}
@@ -332,6 +346,12 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                           復元
                         </button>
                       )}
+                      <button
+                        onClick={() => onCreateRevision(sample)}
+                        className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                      >
+                        改良
+                      </button>
                       <button
                         onClick={() => onEdit(sample)}
                         className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
@@ -370,6 +390,11 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                   <div className="text-text-main text-sm font-medium truncate">
                     {sample.sampleName || '(名称なし)'}
                   </div>
+                  {sample.parentId && (
+                    <div className="text-xs text-accent truncate">
+                      ← {getParentName(sample.parentId)} の改良
+                    </div>
+                  )}
                   <div className="text-text-muted text-xs mt-0.5">
                     お客様: {sample.brand || '-'}
                     {sample.manufacturer ? ` / 依頼先: ${sample.manufacturer}` : ''}
@@ -413,6 +438,12 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                     復元
                   </button>
                 )}
+                <button
+                  onClick={() => onCreateRevision(sample)}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                >
+                  改良
+                </button>
                 <button
                   onClick={() => onEdit(sample)}
                   className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"

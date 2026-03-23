@@ -40,7 +40,11 @@ function App() {
 
   const handleSave = useCallback(async (sampleData) => {
     try {
-      if (editingSample) {
+      if (editingSample && editingSample._isRevision) {
+        // Revision: always create a new sample with parentId
+        await addSample(sampleData)
+        setEditingSample(null)
+      } else if (editingSample) {
         await updateSample(editingSample.id, sampleData)
         setEditingSample(null)
       } else {
@@ -83,6 +87,29 @@ function App() {
     }
   }, [loadSamples])
 
+  const handleCreateRevision = useCallback((sample) => {
+    const revision = {
+      manufacturer: sample.manufacturer || '',
+      brand: sample.brand || '',
+      projectName: sample.projectName || '',
+      sampleName: '',
+      requestDetail: '',
+      ingredientNote: '',
+      salesTarget: sample.salesTarget || '',
+      factoryName: sample.factoryName || '',
+      requestDate: '',
+      receiveDate: '',
+      quantity: sample.quantity || '',
+      ingredientList: '未',
+      estimate: '未',
+      note: '',
+      parentId: sample.id,
+      parentName: sample.sampleName || sample.requestDetail || '(名称なし)',
+    }
+    setEditingSample({ ...revision, _isRevision: true })
+    setActiveTab('new')
+  }, [])
+
   const handleImportComplete = useCallback(async () => {
     await loadSamples()
   }, [loadSamples])
@@ -113,6 +140,7 @@ function App() {
             onEdit={handleEdit}
             onStatusChange={handleStatusChange}
             onDelete={handleDelete}
+            onCreateRevision={handleCreateRevision}
           />
         )
       case 'new':

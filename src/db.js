@@ -7,6 +7,13 @@ db.version(1).stores({
   appState: 'key',
 })
 
+db.version(2).stores({
+  samples: '++id, manufacturer, brand, requestDate, receiveDate, status, parentId',
+  appState: 'key',
+}).upgrade(tx => {
+  // No data migration needed, parentId will be undefined for existing records
+})
+
 // --- Status auto-determination ---
 
 function determineStatus(sample) {
