@@ -35,14 +35,16 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
   const [searchText, setSearchText] = useState('')
   const [sortKey, setSortKey] = useState('requestDate')
   const [sortAsc, setSortAsc] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState(new Set())
 
-  const parentMap = useMemo(() => {
-    const map = {}
-    samples.forEach(s => { map[s.id] = s.sampleName || s.requestDetail || '(名称なし)' })
-    return map
-  }, [samples])
-
-  const getParentName = (pid) => parentMap[pid] || '(削除済み)'
+  const toggleCollapse = useCallback((parentId) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev)
+      if (next.has(parentId)) next.delete(parentId)
+      else next.add(parentId)
+      return next
+    })
+  }, [])
 
   const manufacturers = useMemo(() => {
     const set = new Set(samples.map(s => s.manufacturer).filter(Boolean))
@@ -106,6 +108,43 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
 
     return result
   }, [samples, statusFilter, manufacturerFilter, brandFilter, searchText, sortKey, sortAsc])
+
+  const treeItems = useMemo(() => {
+    const filteredIds = new Set(filteredSamples.map(s => s.id))
+    const childrenMap = {}  // parentId -> [children]
+    const roots = []
+
+    // Group children by parent
+    for (const s of filteredSamples) {
+      if (s.parentId && filteredIds.has(s.parentId)) {
+        if (!childrenMap[s.parentId]) childrenMap[s.parentId] = []
+        childrenMap[s.parentId].push(s)
+      } else {
+        roots.push(s)
+      }
+    }
+
+    // Build flat list with depth info
+    const items = []
+    for (const root of roots) {
+      const children = childrenMap[root.id] || []
+      const hasChildren = children.length > 0
+      items.push({ ...root, _depth: 0, _hasChildren: hasChildren, _childCount: children.length })
+      if (hasChildren && !collapsedGroups.has(root.id)) {
+        for (const child of children) {
+          // Also check if this child has grandchildren
+          const grandchildren = childrenMap[child.id] || []
+          items.push({ ...child, _depth: 1, _hasChildren: grandchildren.length > 0, _childCount: grandchildren.length })
+          if (grandchildren.length > 0 && !collapsedGroups.has(child.id)) {
+            for (const gc of grandchildren) {
+              items.push({ ...gc, _depth: 2, _hasChildren: false, _childCount: 0 })
+            }
+          }
+        }
+      }
+    }
+    return items
+  }, [filteredSamples, collapsedGroups])
 
   const handleManufacturerChange = (value) => {
     setManufacturerFilter(value)
@@ -226,6 +265,9 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
         <div className="flex items-center justify-between">
           <div className="text-xs text-text-muted">
             {filteredSamples.length}件 表示中 / 全{samples.length}件
+            {treeItems.length !== filteredSamples.length && (
+              <span className="ml-1">({treeItems.length}件 展開表示)</span>
+            )}
           </div>
           <div className="flex gap-2">
             <button
@@ -280,17 +322,19 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
             </tr>
           </thead>
           <tbody>
-            {filteredSamples.length === 0 ? (
+            {treeItems.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-12 text-text-muted">
                   該当するサンプルはありません
                 </td>
               </tr>
             ) : (
-              filteredSamples.map((sample) => (
+              treeItems.map((sample) => (
                 <tr
                   key={sample.id}
-                  className="border-b border-border/50 hover:bg-card-hover transition-colors"
+                  className={`border-b border-border/50 hover:bg-card-hover transition-colors ${
+                    sample._depth > 0 ? 'bg-card/30' : ''
+                  }`}
                 >
                   <td className="py-3 px-3">
                     <StatusBadge status={sample.status} />
@@ -299,21 +343,34 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                     {sample.requestDate || '-'}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main">
-                    {sample.brand || '-'}
+                    {sample._depth > 0 ? '-' : (sample.brand || '-')}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main">
-                    {sample.manufacturer || '-'}
+                    {sample._depth > 0 ? '-' : (sample.manufacturer || '-')}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-sub">
                     {sample.factoryName || '-'}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main max-w-[200px]">
-                    <div className="truncate">{sample.sampleName || '-'}</div>
-                    {sample.parentId && (
-                      <div className="text-xs text-accent truncate mt-0.5">
-                        ← {getParentName(sample.parentId)} の改良
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {sample._depth === 0 && sample._hasChildren && (
+                        <button
+                          onClick={() => toggleCollapse(sample.id)}
+                          className="text-text-muted text-xs shrink-0 w-4"
+                        >
+                          {collapsedGroups.has(sample.id) ? '▶' : '▼'}
+                        </button>
+                      )}
+                      {sample._depth > 0 && (
+                        <span className={`text-accent/50 shrink-0 ${sample._depth === 1 ? 'ml-4' : 'ml-8'}`}>↳</span>
+                      )}
+                      <span className="truncate">{sample.sampleName || '-'}</span>
+                      {sample._depth === 0 && sample._hasChildren && (
+                        <span className="text-xs text-accent bg-accent-glow px-1.5 py-0.5 rounded-full shrink-0 ml-1">
+                          {sample._childCount}
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="py-3 px-3 text-sm text-text-sub max-w-[200px] truncate">
                     {sample.requestDetail || '-'}
@@ -375,39 +432,56 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
 
       {/* Mobile card view */}
       <div className="md:hidden space-y-2">
-        {filteredSamples.length === 0 ? (
+        {treeItems.length === 0 ? (
           <div className="bg-card rounded-xl p-6 text-center text-text-muted">
             該当するサンプルはありません
           </div>
         ) : (
-          filteredSamples.map((sample) => (
+          treeItems.map((sample) => (
             <div
               key={sample.id}
-              className={`bg-card rounded-xl p-4 space-y-2 ${sample.status === 'アーカイブ' ? 'opacity-60' : ''}`}
+              className={`bg-card rounded-xl space-y-2 ${
+                sample._depth === 0 ? 'p-4' : 'p-3 ml-4 border-l-2 border-accent/30 bg-card/50'
+              } ${sample._depth >= 2 ? 'ml-8' : ''} ${sample.status === 'アーカイブ' ? 'opacity-60' : ''}`}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="text-text-main text-sm font-medium truncate">
-                    {sample.sampleName || '(名称なし)'}
-                  </div>
-                  {sample.parentId && (
-                    <div className="text-xs text-accent truncate">
-                      ← {getParentName(sample.parentId)} の改良
+                  <div className="flex items-center gap-2">
+                    {sample._depth === 0 && sample._hasChildren && (
+                      <button
+                        onClick={() => toggleCollapse(sample.id)}
+                        className="text-text-muted text-xs shrink-0"
+                      >
+                        {collapsedGroups.has(sample.id) ? '▶' : '▼'}
+                      </button>
+                    )}
+                    {sample._depth > 0 && (
+                      <span className="text-accent text-xs shrink-0">↳</span>
+                    )}
+                    <div className="text-text-main text-sm font-medium truncate">
+                      {sample.sampleName || sample.requestDetail || '(名称なし)'}
                     </div>
-                  )}
+                  </div>
                   <div className="text-text-muted text-xs mt-0.5">
-                    お客様: {sample.brand || '-'}
-                    {sample.manufacturer ? ` / 依頼先: ${sample.manufacturer}` : ''}
+                    {sample._depth === 0 ? (
+                      <>
+                        お客様: {sample.brand || '-'}
+                        {sample.manufacturer ? ` / 依頼先: ${sample.manufacturer}` : ''}
+                      </>
+                    ) : (
+                      sample.requestDetail || ''
+                    )}
                   </div>
                 </div>
-                <StatusBadge status={sample.status} />
-              </div>
-
-              {sample.requestDetail && (
-                <div className="text-text-sub text-xs line-clamp-2">
-                  {sample.requestDetail}
+                <div className="flex items-center gap-2">
+                  {sample._depth === 0 && sample._hasChildren && (
+                    <span className="text-xs text-accent bg-accent-glow px-1.5 py-0.5 rounded-full">
+                      {sample._childCount}回改良
+                    </span>
+                  )}
+                  <StatusBadge status={sample.status} />
                 </div>
-              )}
+              </div>
 
               <div className="flex items-center gap-4 text-xs text-text-muted">
                 <span>依頼: {sample.requestDate || '-'}</span>
