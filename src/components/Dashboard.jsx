@@ -92,8 +92,8 @@ function Dashboard({ samples }) {
                     {sample.sampleName || '(名称なし)'}
                   </div>
                   <div className="text-text-muted text-xs truncate">
-                    {sample.manufacturer}
-                    {sample.brand ? ` / ${sample.brand}` : ''}
+                    {sample.brand || '-'}
+                    {sample.manufacturer ? ` / ${sample.manufacturer}` : ''}
                   </div>
                 </div>
                 <div className="text-text-muted text-xs whitespace-nowrap">
@@ -109,7 +109,7 @@ function Dashboard({ samples }) {
       {manufacturerSummary.length > 0 && (
         <section>
           <h2 className="text-sm font-medium text-text-sub mb-3">
-            メーカー別 未到着数
+            依頼先別 未到着数
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {manufacturerSummary.map(([name, count]) => (

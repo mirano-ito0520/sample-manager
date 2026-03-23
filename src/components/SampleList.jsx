@@ -5,13 +5,13 @@ const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '
 const CSV_COLUMNS = [
   { key: 'status', label: 'ステータス' },
   { key: 'requestDate', label: '依頼日' },
-  { key: 'manufacturer', label: 'メーカー' },
-  { key: 'brand', label: 'ブランド' },
+  { key: 'brand', label: 'お客様' },
+  { key: 'manufacturer', label: '依頼先' },
+  { key: 'factoryName', label: '製造元' },
   { key: 'projectName', label: 'プロジェクト名' },
   { key: 'sampleName', label: 'サンプル名' },
   { key: 'requestDetail', label: '依頼内容' },
   { key: 'salesTarget', label: '販売先' },
-  { key: 'factoryName', label: '製造会社' },
   { key: 'receiveDate', label: '受取日' },
   { key: 'quantity', label: '本数' },
   { key: 'ingredientList', label: '全成分表示' },
@@ -177,20 +177,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
             </select>
           </div>
           <div>
-            <label className="block text-xs text-text-muted mb-1">メーカー</label>
-            <select
-              value={manufacturerFilter}
-              onChange={(e) => handleManufacturerChange(e.target.value)}
-              className="w-full bg-input text-text-main border border-border rounded-lg px-3 py-2 text-sm"
-            >
-              <option value="全て">全て</option>
-              {manufacturers.map(m => (
-                <option key={m} value={m}>{m}</option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-xs text-text-muted mb-1">ブランド</label>
+            <label className="block text-xs text-text-muted mb-1">お客様</label>
             <select
               value={brandFilter}
               onChange={(e) => setBrandFilter(e.target.value)}
@@ -199,6 +186,19 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
               <option value="全て">全て</option>
               {brands.map(b => (
                 <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs text-text-muted mb-1">依頼先</label>
+            <select
+              value={manufacturerFilter}
+              onChange={(e) => handleManufacturerChange(e.target.value)}
+              className="w-full bg-input text-text-main border border-border rounded-lg px-3 py-2 text-sm"
+            >
+              <option value="全て">全て</option>
+              {manufacturers.map(m => (
+                <option key={m} value={m}>{m}</option>
               ))}
             </select>
           </div>
@@ -261,8 +261,9 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
             <tr className="border-b border-border">
               <th className="text-left text-xs text-text-muted font-medium py-3 px-3">ステータス</th>
               <th className="text-left text-xs text-text-muted font-medium py-3 px-3">依頼日</th>
-              <th className="text-left text-xs text-text-muted font-medium py-3 px-3">メーカー</th>
-              <th className="text-left text-xs text-text-muted font-medium py-3 px-3">ブランド</th>
+              <th className="text-left text-xs text-text-muted font-medium py-3 px-3">お客様</th>
+              <th className="text-left text-xs text-text-muted font-medium py-3 px-3">依頼先</th>
+              <th className="text-left text-xs text-text-muted font-medium py-3 px-3">製造元</th>
               <th className="text-left text-xs text-text-muted font-medium py-3 px-3">サンプル名</th>
               <th className="text-left text-xs text-text-muted font-medium py-3 px-3">依頼内容</th>
               <th className="text-left text-xs text-text-muted font-medium py-3 px-3">受取日</th>
@@ -272,7 +273,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
           <tbody>
             {filteredSamples.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-text-muted">
+                <td colSpan={9} className="text-center py-12 text-text-muted">
                   該当するサンプルはありません
                 </td>
               </tr>
@@ -289,10 +290,13 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                     {sample.requestDate || '-'}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main">
-                    {sample.manufacturer || '-'}
+                    {sample.brand || '-'}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main">
-                    {sample.brand || '-'}
+                    {sample.manufacturer || '-'}
+                  </td>
+                  <td className="py-3 px-3 text-sm text-text-sub">
+                    {sample.factoryName || '-'}
                   </td>
                   <td className="py-3 px-3 text-sm text-text-main max-w-[200px] truncate">
                     {sample.sampleName || '-'}
@@ -367,8 +371,8 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                     {sample.sampleName || '(名称なし)'}
                   </div>
                   <div className="text-text-muted text-xs mt-0.5">
-                    {sample.manufacturer || '-'}
-                    {sample.brand ? ` / ${sample.brand}` : ''}
+                    お客様: {sample.brand || '-'}
+                    {sample.manufacturer ? ` / 依頼先: ${sample.manufacturer}` : ''}
                   </div>
                 </div>
                 <StatusBadge status={sample.status} />

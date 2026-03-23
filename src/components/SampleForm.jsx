@@ -162,17 +162,33 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Manufacturer & Brand */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* お客様 & 依頼先 & 製造元 */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className={labelClass}>メーカー</label>
+              <label className={labelClass}>お客様</label>
+              <input
+                type="text"
+                value={brand}
+                onChange={(e) => setBrand(e.target.value)}
+                list="brand-list"
+                className={inputClass}
+                placeholder="お客様名"
+              />
+              <datalist id="brand-list">
+                {uniqueBrands.map(b => (
+                  <option key={b} value={b} />
+                ))}
+              </datalist>
+            </div>
+            <div>
+              <label className={labelClass}>依頼先</label>
               <input
                 type="text"
                 value={manufacturer}
                 onChange={(e) => setManufacturer(e.target.value)}
                 list="manufacturer-list"
                 className={inputClass}
-                placeholder="メーカー名"
+                placeholder="依頼先名"
               />
               <datalist id="manufacturer-list">
                 {uniqueManufacturers.map(m => (
@@ -181,18 +197,18 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
               </datalist>
             </div>
             <div>
-              <label className={labelClass}>ブランド</label>
+              <label className={labelClass}>製造元</label>
               <input
                 type="text"
-                value={brand}
-                onChange={(e) => setBrand(e.target.value)}
-                list="brand-list"
+                value={factoryName}
+                onChange={(e) => setFactoryName(e.target.value)}
+                list="factory-list"
                 className={inputClass}
-                placeholder="ブランド名"
+                placeholder="製造元名"
               />
-              <datalist id="brand-list">
-                {uniqueBrands.map(b => (
-                  <option key={b} value={b} />
+              <datalist id="factory-list">
+                {uniqueFactoryNames.map(f => (
+                  <option key={f} value={f} />
                 ))}
               </datalist>
             </div>
@@ -269,40 +285,22 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
             />
           </div>
 
-          {/* Sales target & Factory */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className={labelClass}>販売先</label>
-              <input
-                type="text"
-                value={salesTarget}
-                onChange={(e) => setSalesTarget(e.target.value)}
-                list="sales-target-list"
-                className={inputClass}
-                placeholder="任意"
-              />
-              <datalist id="sales-target-list">
-                {uniqueSalesTargets.map(s => (
-                  <option key={s} value={s} />
-                ))}
-              </datalist>
-            </div>
-            <div>
-              <label className={labelClass}>製造会社</label>
-              <input
-                type="text"
-                value={factoryName}
-                onChange={(e) => setFactoryName(e.target.value)}
-                list="factory-list"
-                className={inputClass}
-                placeholder="任意"
-              />
-              <datalist id="factory-list">
-                {uniqueFactoryNames.map(f => (
-                  <option key={f} value={f} />
-                ))}
-              </datalist>
-            </div>
+          {/* Sales target */}
+          <div>
+            <label className={labelClass}>販売先</label>
+            <input
+              type="text"
+              value={salesTarget}
+              onChange={(e) => setSalesTarget(e.target.value)}
+              list="sales-target-list"
+              className={inputClass}
+              placeholder="任意"
+            />
+            <datalist id="sales-target-list">
+              {uniqueSalesTargets.map(s => (
+                <option key={s} value={s} />
+              ))}
+            </datalist>
           </div>
 
           {/* Dates */}
