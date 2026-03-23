@@ -50,6 +50,7 @@ function App() {
       setActiveTab('list')
     } catch (e) {
       console.error('Failed to save sample:', e)
+      alert('保存に失敗しました。もう一度お試しください。')
     }
   }, [editingSample, loadSamples])
 
@@ -68,6 +69,7 @@ function App() {
       await loadSamples()
     } catch (e) {
       console.error('Failed to update status:', e)
+      alert('ステータスの更新に失敗しました。')
     }
   }, [loadSamples])
 
@@ -77,6 +79,7 @@ function App() {
       await loadSamples()
     } catch (e) {
       console.error('Failed to delete sample:', e)
+      alert('削除に失敗しました。')
     }
   }, [loadSamples])
 

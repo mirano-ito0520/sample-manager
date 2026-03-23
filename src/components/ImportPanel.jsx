@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react'
 import { parseMultipleExcelFiles } from '../excelImport'
-import { bulkAddSamples, clearAllSamples } from '../db'
+import { bulkAddSamples, clearAllSamples, getAllSamples } from '../db'
 
 function ImportPanel({ onImportComplete }) {
   const [files, setFiles] = useState([])
@@ -41,7 +41,25 @@ function ImportPanel({ onImportComplete }) {
       }
 
       if (clearBeforeImport) {
-        await clearAllSamples()
+        const backup = await getAllSamples()
+        try {
+          await clearAllSamples()
+          const count = await bulkAddSamples(parsed)
+          setResult(count)
+          setFiles([])
+          if (fileInputRef.current) fileInputRef.current.value = ''
+          onImportComplete()
+          return
+        } catch (restoreErr) {
+          // インポート失敗時はバックアップから復元
+          try {
+            const cleaned = backup.map(({ id, ...rest }) => rest)
+            await bulkAddSamples(cleaned)
+          } catch (e2) {
+            console.error('Restore failed:', e2)
+          }
+          throw restoreErr
+        }
       }
 
       const count = await bulkAddSamples(parsed)
