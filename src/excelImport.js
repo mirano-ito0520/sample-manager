@@ -10,13 +10,23 @@ function excelDateToString(excelDate) {
     // Try to parse date string
     const d = new Date(excelDate)
     if (!isNaN(d.getTime())) {
-      return d.toISOString().split('T')[0]
+      // Use UTC components to avoid timezone shift
+      const y = d.getUTCFullYear()
+      const m = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const dd = String(d.getUTCDate()).padStart(2, '0')
+      return `${y}-${m}-${dd}`
     }
     return null
   }
   if (typeof excelDate === 'number') {
-    const date = new Date((excelDate - 25569) * 86400 * 1000)
-    return date.toISOString().split('T')[0]
+    const days = excelDate - 25569
+    const ms = days * 86400 * 1000
+    const date = new Date(ms)
+    // Use UTC components to avoid timezone shift
+    const y = date.getUTCFullYear()
+    const m = String(date.getUTCMonth() + 1).padStart(2, '0')
+    const d = String(date.getUTCDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
   }
   return null
 }

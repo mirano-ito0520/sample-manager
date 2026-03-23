@@ -96,7 +96,7 @@ function ImportPanel({ onImportComplete }) {
           <button
             type="button"
             onClick={() => fileInputRef.current?.click()}
-            className="bg-accent hover:bg-accent-light text-white font-medium px-5 py-2.5 rounded-lg transition-colors text-sm"
+            className="bg-accent hover:bg-accent-hover text-white font-medium px-5 py-2.5 rounded-lg transition-colors text-sm"
           >
             ファイルを選択
           </button>
@@ -162,7 +162,7 @@ function ImportPanel({ onImportComplete }) {
           className={`w-full font-medium py-3 rounded-lg transition-colors text-sm ${
             files.length === 0 || importing
               ? 'bg-border text-text-muted cursor-not-allowed'
-              : 'bg-accent hover:bg-accent-light text-white'
+              : 'bg-accent hover:bg-accent-hover text-white'
           }`}
         >
           {importing ? 'インポート中...' : 'インポート開始'}

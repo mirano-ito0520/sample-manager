@@ -77,13 +77,12 @@ export async function addSample(sample) {
 }
 
 export async function updateSample(id, changes) {
-  // Re-determine status when relevant fields change
+  const existing = await db.samples.get(id)
+  if (!existing) throw new Error(`Sample with id ${id} not found`)
+
   if ('requestDate' in changes || 'receiveDate' in changes || 'note' in changes) {
-    const existing = await db.samples.get(id)
-    if (existing) {
-      const merged = { ...existing, ...changes }
-      changes.status = determineStatus(merged)
-    }
+    const merged = { ...existing, ...changes }
+    changes.status = determineStatus(merged)
   }
   await db.samples.update(id, changes)
   await backupToLocalStorage()
@@ -107,27 +106,4 @@ export async function bulkAddSamples(samples) {
 export async function clearAllSamples() {
   await db.samples.clear()
   await backupToLocalStorage()
-}
-
-// --- Unique value helpers (for autocomplete / suggestions) ---
-
-export async function getUniqueSampleNames() {
-  const all = await db.samples.toArray()
-  const names = [...new Set(all.map((s) => s.sampleName).filter(Boolean))]
-  names.sort((a, b) => a.localeCompare(b, 'ja'))
-  return names
-}
-
-export async function getUniqueManufacturers() {
-  const all = await db.samples.toArray()
-  const names = [...new Set(all.map((s) => s.manufacturer).filter(Boolean))]
-  names.sort((a, b) => a.localeCompare(b, 'ja'))
-  return names
-}
-
-export async function getUniqueBrands() {
-  const all = await db.samples.toArray()
-  const names = [...new Set(all.map((s) => s.brand).filter(Boolean))]
-  names.sort((a, b) => a.localeCompare(b, 'ja'))
-  return names
 }

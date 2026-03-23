@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 
 const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '対応不可']
 
@@ -30,6 +30,18 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
     const set = new Set(filtered.map(s => s.brand).filter(Boolean))
     return [...set].sort((a, b) => a.localeCompare(b, 'ja'))
   }, [samples, manufacturerFilter])
+
+  useEffect(() => {
+    if (manufacturerFilter !== '全て' && !manufacturers.includes(manufacturerFilter)) {
+      setManufacturerFilter('全て')
+    }
+  }, [manufacturers])
+
+  useEffect(() => {
+    if (brandFilter !== '全て' && !brands.includes(brandFilter)) {
+      setBrandFilter('全て')
+    }
+  }, [brands])
 
   const filteredSamples = useMemo(() => {
     let result = [...samples]

@@ -10,7 +10,7 @@
   --color-text-sub: #A1A1AA;
   --color-text-muted: #636369;
   --color-accent: #3B82F6;
-  --color-accent-light: #1D4ED8;
+  --color-accent-hover: #1D4ED8;
   --color-accent-glow: rgba(59, 130, 246, 0.15);
   --color-accent-glow-strong: rgba(59, 130, 246, 0.25);
   --color-success: #22C55E;
@@ -62,9 +62,11 @@ button:active {
   transform: scale(0.97);
 }
 
-::-webkit-scrollbar {
-  width: 0;
-  display: none;
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 0;
+    display: none;
+  }
 }
 
 @supports (padding: env(safe-area-inset-top)) {

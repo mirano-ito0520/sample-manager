@@ -1,8 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
 
-function SampleForm({ samples, editingSample, onSave, onCancel }) {
-  const today = new Date().toISOString().split('T')[0]
+function getToday() {
+  const now = new Date()
+  const y = now.getFullYear()
+  const m = String(now.getMonth() + 1).padStart(2, '0')
+  const d = String(now.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
 
+function SampleForm({ samples, editingSample, onSave, onCancel }) {
   const [manufacturer, setManufacturer] = useState('')
   const [brand, setBrand] = useState('')
   const [projectName, setProjectName] = useState('')
@@ -11,7 +17,7 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
   const [ingredientNote, setIngredientNote] = useState('')
   const [salesTarget, setSalesTarget] = useState('')
   const [factoryName, setFactoryName] = useState('')
-  const [requestDate, setRequestDate] = useState(today)
+  const [requestDate, setRequestDate] = useState(getToday())
   const [receiveDate, setReceiveDate] = useState('')
   const [quantity, setQuantity] = useState('')
   const [ingredientList, setIngredientList] = useState('未')
@@ -86,7 +92,7 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
     setIngredientNote('')
     setSalesTarget('')
     setFactoryName('')
-    setRequestDate(today)
+    setRequestDate(getToday())
     setReceiveDate('')
     setQuantity('')
     setIngredientList('未')
@@ -377,7 +383,7 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-accent hover:bg-accent-light text-white font-medium py-3 rounded-lg transition-colors text-sm"
+              className="w-full bg-accent hover:bg-accent-hover text-white font-medium py-3 rounded-lg transition-colors text-sm"
             >
               {editingSample ? '更新' : '登録'}
             </button>
