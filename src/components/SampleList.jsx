@@ -322,7 +322,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                         </button>
                       ) : (
                         <button
-                          onClick={() => onStatusChange(sample.id, { status: '未到着' })}
+                          onClick={() => onStatusChange(sample.id, { status: 'restore' })}
                           className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
                         >
                           復元
@@ -403,7 +403,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete }) {
                   </button>
                 ) : (
                   <button
-                    onClick={() => onStatusChange(sample.id, { status: '未到着' })}
+                    onClick={() => onStatusChange(sample.id, { status: 'restore' })}
                     className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
                   >
                     復元

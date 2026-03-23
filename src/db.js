@@ -80,10 +80,29 @@ export async function updateSample(id, changes) {
   const existing = await db.samples.get(id)
   if (!existing) throw new Error(`Sample with id ${id} not found`)
 
-  if ('requestDate' in changes || 'receiveDate' in changes || 'note' in changes) {
+  // アーカイブ状態への明示的な変更
+  if (changes.status === 'アーカイブ') {
+    await db.samples.update(id, changes)
+    await backupToLocalStorage()
+    return
+  }
+
+  // 「復元」の場合: status を正しく再計算
+  if (changes.status === 'restore') {
+    const merged = { ...existing, ...changes }
+    delete merged.status
+    changes.status = determineStatus(merged)
+  }
+  // 通常の編集: アーカイブ中のサンプルはアーカイブを維持
+  else if (existing.status === 'アーカイブ' && !('status' in changes)) {
+    // status を変更しない（アーカイブを保持）
+  }
+  // 通常の編集: ステータスに影響する項目が変わったら再計算
+  else if ('requestDate' in changes || 'receiveDate' in changes || 'note' in changes) {
     const merged = { ...existing, ...changes }
     changes.status = determineStatus(merged)
   }
+
   await db.samples.update(id, changes)
   await backupToLocalStorage()
 }
