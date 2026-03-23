@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/sample-manager/',
   plugins: [
     react(),
     tailwindcss(),
@@ -18,7 +19,7 @@ export default defineConfig({
         background_color: '#0D0D0F',
         display: 'standalone',
         orientation: 'any',
-        start_url: '/',
+        start_url: '/sample-manager/',
         icons: [
           {
             src: 'icon-192.png',
