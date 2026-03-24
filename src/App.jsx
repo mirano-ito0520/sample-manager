@@ -18,22 +18,22 @@ function App() {
   const [loading, setLoading] = useState(true)
   const [editingSample, setEditingSample] = useState(null)
 
-  const loadSamples = useCallback(async () => {
-    setLoading(true)
+  const loadSamples = useCallback(async (initial = false) => {
+    if (initial) setLoading(true)
     try {
       const data = await getAllSamples()
       setSamples(data)
     } catch (e) {
       console.error('Failed to load samples:', e)
     } finally {
-      setLoading(false)
+      if (initial) setLoading(false)
     }
   }, [])
 
   useEffect(() => {
     const init = async () => {
       await restoreFromBackupIfNeeded()
-      await loadSamples()
+      await loadSamples(true)
     }
     init()
   }, [loadSamples])
