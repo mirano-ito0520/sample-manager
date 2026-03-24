@@ -38,25 +38,34 @@ function App() {
     init()
   }, [loadSamples])
 
+  const [toast, setToast] = useState(null)
+
+  const showToast = useCallback((msg) => {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2000)
+  }, [])
+
   const handleSave = useCallback(async (sampleData) => {
     try {
       if (editingSample && editingSample._isRevision) {
-        // Revision: always create a new sample with parentId
         await addSample(sampleData)
         setEditingSample(null)
+        showToast('改良版を登録しました')
       } else if (editingSample) {
         await updateSample(editingSample.id, sampleData)
         setEditingSample(null)
+        showToast('更新しました')
       } else {
         await addSample(sampleData)
+        showToast('登録しました')
       }
       await loadSamples()
-      setActiveTab('list')
     } catch (e) {
       console.error('Failed to save sample:', e)
       alert('保存に失敗しました。もう一度お試しください。')
+      throw e
     }
-  }, [editingSample, loadSamples])
+  }, [editingSample, loadSamples, showToast])
 
   const handleEdit = useCallback((sample) => {
     setEditingSample(sample)
@@ -69,13 +78,34 @@ function App() {
 
   const handleStatusChange = useCallback(async (id, changes) => {
     try {
-      await updateSample(id, changes)
+      // アーカイブ時は改良版も一括で保留にする
+      if (changes.status === 'アーカイブ') {
+        const descendants = []
+        const findChildren = (parentId) => {
+          for (const s of samples) {
+            if (s.parentId === parentId) {
+              if (s.status !== 'アーカイブ') descendants.push(s.id)
+              findChildren(s.id)  // 中間ノードがアーカイブ済みでも先の子を走査
+            }
+          }
+        }
+        findChildren(id)
+        await updateSample(id, changes)
+        for (const childId of descendants) {
+          await updateSample(childId, { status: 'アーカイブ' })
+        }
+        if (descendants.length > 0) {
+          showToast(`${1 + descendants.length}件を一括保留にしました`)
+        }
+      } else {
+        await updateSample(id, changes)
+      }
       await loadSamples()
     } catch (e) {
       console.error('Failed to update status:', e)
       alert('ステータスの更新に失敗しました。')
     }
-  }, [loadSamples])
+  }, [loadSamples, samples, showToast])
 
   const handleDelete = useCallback(async (id) => {
     try {
@@ -214,6 +244,13 @@ function App() {
           ))}
         </div>
       </nav>
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-success text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-lg animate-fade-in">
+          {toast}
+        </div>
+      )}
     </div>
   )
 }

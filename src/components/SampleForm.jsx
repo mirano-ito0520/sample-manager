@@ -194,7 +194,9 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
       note,
       parentId: parentId || null,
     }
-    onSave(data)
+    onSave(data).then(() => {
+      if (!editingSample) resetForm()
+    }).catch(() => {})
   }
 
   const inputClass = 'w-full bg-input text-text-main border border-border rounded-lg px-3 py-2 text-sm placeholder:text-text-muted'
