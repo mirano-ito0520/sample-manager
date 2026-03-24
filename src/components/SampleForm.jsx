@@ -8,7 +8,7 @@ function getToday() {
   return `${y}-${m}-${d}`
 }
 
-function SampleForm({ samples, editingSample, onSave, onCancel }) {
+function SampleForm({ samples, editingSample, onSave, onCancel, saving }) {
   const [manufacturer, setManufacturer] = useState('')
   const [brand, setBrand] = useState('')
   const [projectName, setProjectName] = useState('')
@@ -505,9 +505,14 @@ function SampleForm({ samples, editingSample, onSave, onCancel }) {
           <div className="pt-2">
             <button
               type="submit"
-              className="w-full bg-accent hover:bg-accent-hover text-white font-medium py-3 rounded-lg transition-colors text-sm"
+              disabled={saving}
+              className={`w-full font-medium py-3 rounded-lg transition-colors text-sm ${
+                saving
+                  ? 'bg-border text-text-muted cursor-not-allowed'
+                  : 'bg-accent hover:bg-accent-hover text-white'
+              }`}
             >
-              {editingSample ? '更新' : '登録'}
+              {saving ? '処理中...' : editingSample ? '更新' : '登録'}
             </button>
           </div>
         </form>

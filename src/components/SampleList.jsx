@@ -28,7 +28,7 @@ const STATUS_STYLES = {
   'アーカイブ': 'bg-card text-text-muted opacity-60',
 }
 
-function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevision }) {
+function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevision, saving }) {
   const [statusFilter, setStatusFilter] = useState('全て')
   const [manufacturerFilter, setManufacturerFilter] = useState('全て')
   const [brandFilter, setBrandFilter] = useState('全て')

@@ -16,6 +16,7 @@ function App() {
   const [samples, setSamples] = useState([])
   const [activeTab, setActiveTab] = useState('dashboard')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [editingSample, setEditingSample] = useState(null)
 
   const loadSamples = useCallback(async (initial = false) => {
@@ -46,6 +47,8 @@ function App() {
   }, [])
 
   const handleSave = useCallback(async (sampleData) => {
+    if (saving) return
+    setSaving(true)
     try {
       if (editingSample && editingSample._isRevision) {
         await addSample(sampleData)
@@ -64,8 +67,10 @@ function App() {
       console.error('Failed to save sample:', e)
       alert('保存に失敗しました。もう一度お試しください。')
       throw e
+    } finally {
+      setSaving(false)
     }
-  }, [editingSample, loadSamples, showToast])
+  }, [editingSample, loadSamples, showToast, saving])
 
   const handleEdit = useCallback((sample) => {
     setEditingSample(sample)
@@ -77,6 +82,8 @@ function App() {
   }, [])
 
   const handleStatusChange = useCallback(async (id, changes) => {
+    if (saving) return
+    setSaving(true)
     try {
       // アーカイブ時は改良版も一括で保留にする
       if (changes.status === 'アーカイブ') {
@@ -104,18 +111,24 @@ function App() {
     } catch (e) {
       console.error('Failed to update status:', e)
       alert('ステータスの更新に失敗しました。')
+    } finally {
+      setSaving(false)
     }
-  }, [loadSamples, samples, showToast])
+  }, [loadSamples, samples, showToast, saving])
 
   const handleDelete = useCallback(async (id) => {
+    if (saving) return
+    setSaving(true)
     try {
       await deleteSample(id)
       await loadSamples()
     } catch (e) {
       console.error('Failed to delete sample:', e)
       alert('削除に失敗しました。')
+    } finally {
+      setSaving(false)
     }
-  }, [loadSamples])
+  }, [loadSamples, saving])
 
   const handleCreateRevision = useCallback((sample) => {
     const revision = {
@@ -171,6 +184,7 @@ function App() {
             onStatusChange={handleStatusChange}
             onDelete={handleDelete}
             onCreateRevision={handleCreateRevision}
+            saving={saving}
           />
         )
       case 'new':
@@ -179,6 +193,7 @@ function App() {
             samples={samples}
             editingSample={editingSample}
             onSave={handleSave}
+            saving={saving}
             onCancel={handleCancelEdit}
           />
         )
