@@ -347,20 +347,20 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                   <td className="py-3 px-3 text-sm text-text-sub">
                     {sample.factoryName || '-'}
                   </td>
-                  <td className="py-3 px-3 text-sm text-text-main max-w-[200px]">
-                    <div className="flex items-center gap-1">
+                  <td className="py-3 px-3 text-sm text-text-main min-w-[180px]">
+                    <div className="flex items-start gap-1">
                       {sample._depth === 0 && sample._hasChildren && (
                         <button
                           onClick={() => toggleCollapse(sample.id)}
-                          className="text-text-muted text-xs shrink-0 w-4"
+                          className="text-text-muted text-xs shrink-0 w-4 mt-0.5"
                         >
                           {collapsedGroups.has(sample.id) ? '▶' : '▼'}
                         </button>
                       )}
                       {sample._depth > 0 && (
-                        <span className={`text-accent/50 shrink-0 ${sample._depth === 1 ? 'ml-4' : 'ml-8'}`}>↳</span>
+                        <span className={`text-accent/50 shrink-0 mt-0.5 ${sample._depth === 1 ? 'ml-4' : 'ml-8'}`}>↳</span>
                       )}
-                      <span className="truncate">{sample.sampleName || '-'}</span>
+                      <span className="break-words">{sample.sampleName || '-'}</span>
                       {sample._depth === 0 && sample._hasChildren && (
                         <span className="text-xs text-accent bg-accent-glow px-1.5 py-0.5 rounded-full shrink-0 ml-1">
                           {sample._childCount}
@@ -368,8 +368,8 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                       )}
                     </div>
                   </td>
-                  <td className="py-3 px-3 text-sm text-text-sub max-w-[200px] truncate">
-                    {sample.requestDetail || '-'}
+                  <td className="py-3 px-3 text-sm text-text-sub min-w-[150px]">
+                    <span className="break-words">{sample.requestDetail || '-'}</span>
                   </td>
                   <td className="py-3 px-3 text-sm text-text-sub whitespace-nowrap">
                     {sample.receiveDate || '-'}
@@ -454,7 +454,7 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                     {sample._depth > 0 && (
                       <span className="text-accent text-xs shrink-0">↳</span>
                     )}
-                    <div className="text-text-main text-sm font-medium truncate">
+                    <div className="text-text-main text-sm font-medium break-words">
                       {sample.sampleName || sample.requestDetail || '(名称なし)'}
                     </div>
                   </div>
