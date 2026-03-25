@@ -50,21 +50,21 @@ function App() {
     if (saving) return
     setSaving(true)
     try {
+      const wasEditing = !!editingSample
       if (editingSample && editingSample._isRevision) {
         await addSample(sampleData)
         setEditingSample(null)
-        setActiveTab('list')
         showToast('改良版を登録しました')
       } else if (editingSample) {
         await updateSample(editingSample.id, sampleData)
         setEditingSample(null)
-        setActiveTab('list')
         showToast('更新しました')
       } else {
         await addSample(sampleData)
         showToast('登録しました')
       }
       await loadSamples()
+      if (wasEditing) setActiveTab('list')
     } catch (e) {
       console.error('Failed to save sample:', e)
       alert('保存に失敗しました。もう一度お試しください。')
