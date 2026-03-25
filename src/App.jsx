@@ -79,6 +79,7 @@ function App() {
 
   const handleCancelEdit = useCallback(() => {
     setEditingSample(null)
+    setActiveTab('list')
   }, [])
 
   const handleStatusChange = useCallback(async (id, changes) => {
