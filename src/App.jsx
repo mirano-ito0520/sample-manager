@@ -167,29 +167,10 @@ function App() {
     setActiveTab(key)
   }, [])
 
-  const renderContent = () => {
-    if (loading) {
-      return (
-        <div className="flex items-center justify-center py-20">
-          <div className="text-text-sub text-lg">読み込み中...</div>
-        </div>
-      )
-    }
-
+  const renderOtherTab = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard samples={samples} />
-      case 'list':
-        return (
-          <SampleList
-            samples={samples}
-            onEdit={handleEdit}
-            onStatusChange={handleStatusChange}
-            onDelete={handleDelete}
-            onCreateRevision={handleCreateRevision}
-            saving={saving}
-          />
-        )
       case 'new':
         return (
           <SampleForm
@@ -240,7 +221,25 @@ function App() {
 
       {/* Main content */}
       <main className="max-w-6xl mx-auto px-4 py-4">
-        {renderContent()}
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="text-text-sub text-lg">読み込み中...</div>
+          </div>
+        ) : (
+          <>
+            <div className={activeTab === 'list' ? '' : 'hidden'}>
+              <SampleList
+                samples={samples}
+                onEdit={handleEdit}
+                onStatusChange={handleStatusChange}
+                onDelete={handleDelete}
+                onCreateRevision={handleCreateRevision}
+                saving={saving}
+              />
+            </div>
+            {activeTab !== 'list' && renderOtherTab()}
+          </>
+        )}
       </main>
 
       {/* Mobile bottom tab bar */}
