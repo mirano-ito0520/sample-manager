@@ -53,10 +53,12 @@ function App() {
       if (editingSample && editingSample._isRevision) {
         await addSample(sampleData)
         setEditingSample(null)
+        setActiveTab('list')
         showToast('改良版を登録しました')
       } else if (editingSample) {
         await updateSample(editingSample.id, sampleData)
         setEditingSample(null)
+        setActiveTab('list')
         showToast('更新しました')
       } else {
         await addSample(sampleData)
