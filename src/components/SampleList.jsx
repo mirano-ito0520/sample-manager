@@ -97,8 +97,9 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
     }
 
     result.sort((a, b) => {
-      const aVal = a[sortKey] || ''
-      const bVal = b[sortKey] || ''
+      const raw = (v) => (!v || v === '不明') ? '' : v
+      const aVal = raw(a[sortKey])
+      const bVal = raw(b[sortKey])
       if (!aVal && !bVal) return 0
       if (!aVal) return 1
       if (!bVal) return -1

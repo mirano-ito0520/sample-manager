@@ -16,10 +16,12 @@ function Dashboard({ samples }) {
     return activeSamples
       .filter(s => s.status === '未到着' || s.status === '依頼準備中')
       .sort((a, b) => {
-        if (!a.requestDate && !b.requestDate) return 0
-        if (!a.requestDate) return 1
-        if (!b.requestDate) return -1
-        return b.requestDate.localeCompare(a.requestDate)
+        const aD = (a.requestDate && a.requestDate !== '不明') ? a.requestDate : ''
+        const bD = (b.requestDate && b.requestDate !== '不明') ? b.requestDate : ''
+        if (!aD && !bD) return 0
+        if (!aD) return 1
+        if (!bD) return -1
+        return bD.localeCompare(aD)
       })
       .slice(0, 10)
   }, [samples])

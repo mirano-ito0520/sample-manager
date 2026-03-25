@@ -431,21 +431,31 @@ function SampleForm({ samples, editingSample, onSave, onCancel, saving }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label className={labelClass}>依頼日</label>
-              <input
-                type="date"
-                value={requestDate}
-                onChange={(e) => setRequestDate(e.target.value)}
-                className={inputClass}
-              />
+              {requestDate === '不明' ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-muted">日付不明</span>
+                  <button type="button" onClick={() => setRequestDate(getToday())} className="text-xs text-accent hover:text-accent-hover transition-colors shrink-0">日付を入力</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input type="date" value={requestDate} onChange={(e) => setRequestDate(e.target.value)} className={inputClass} />
+                  <button type="button" onClick={() => setRequestDate('不明')} className="text-xs text-text-muted hover:text-warn transition-colors shrink-0 whitespace-nowrap">不明</button>
+                </div>
+              )}
             </div>
             <div>
               <label className={labelClass}>受取日</label>
-              <input
-                type="date"
-                value={receiveDate}
-                onChange={(e) => setReceiveDate(e.target.value)}
-                className={inputClass}
-              />
+              {receiveDate === '不明' ? (
+                <div className="flex items-center gap-2">
+                  <span className="flex-1 bg-input border border-border rounded-lg px-3 py-2 text-sm text-text-muted">日付不明</span>
+                  <button type="button" onClick={() => setReceiveDate(getToday())} className="text-xs text-accent hover:text-accent-hover transition-colors shrink-0">日付を入力</button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <input type="date" value={receiveDate} onChange={(e) => setReceiveDate(e.target.value)} className={inputClass} />
+                  <button type="button" onClick={() => setReceiveDate('不明')} className="text-xs text-text-muted hover:text-warn transition-colors shrink-0 whitespace-nowrap">不明</button>
+                </div>
+              )}
             </div>
           </div>
 
