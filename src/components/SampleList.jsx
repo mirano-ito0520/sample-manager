@@ -388,10 +388,18 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                       )}
                       {sample.status === '到着済' && (
                         <button
-                          onClick={() => onStatusChange(sample.id, { status: '商品化' })}
+                          onClick={() => { if (window.confirm(`「${sample.sampleName || '(名称なし)'}」を商品化にしますか？`)) onStatusChange(sample.id, { status: '商品化' }) }}
                           className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
                         >
                           商品化
+                        </button>
+                      )}
+                      {sample.status === '商品化' && (
+                        <button
+                          onClick={() => onStatusChange(sample.id, { status: 'restore' })}
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-card text-text-muted hover:bg-card-hover transition-colors border border-border"
+                        >
+                          商品化取消
                         </button>
                       )}
                       {sample.status !== 'アーカイブ' ? (
@@ -510,10 +518,18 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                 )}
                 {sample.status === '到着済' && (
                   <button
-                    onClick={() => onStatusChange(sample.id, { status: '商品化' })}
+                    onClick={() => { if (window.confirm(`「${sample.sampleName || '(名称なし)'}」を商品化にしますか？`)) onStatusChange(sample.id, { status: '商品化' }) }}
                     className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
                   >
                     商品化
+                  </button>
+                )}
+                {sample.status === '商品化' && (
+                  <button
+                    onClick={() => onStatusChange(sample.id, { status: 'restore' })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-card text-text-muted hover:bg-card-hover transition-colors border border-border"
+                  >
+                    商品化取消
                   </button>
                 )}
                 {sample.status !== 'アーカイブ' ? (
