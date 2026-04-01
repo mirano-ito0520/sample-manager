@@ -85,22 +85,33 @@ export async function updateSample(id, changes) {
   const existing = await db.samples.get(id)
   if (!existing) throw new Error(`Sample with id ${id} not found`)
 
-  // アーカイブ状態への明示的な変更
+  // 明示的なステータス変更（アーカイブ、商品化など）
   if (changes.status === 'アーカイブ') {
+    // アーカイブ前のステータスを保存（復元時に使う）
+    await db.samples.update(id, { ...changes, prevStatus: existing.status })
+    await backupToLocalStorage()
+    return
+  }
+  if (changes.status === '商品化') {
     await db.samples.update(id, changes)
     await backupToLocalStorage()
     return
   }
 
-  // 「復元」の場合: status を正しく再計算
+  // 「復元」の場合: アーカイブ前のステータスに戻す
   if (changes.status === 'restore') {
-    const merged = { ...existing, ...changes }
-    delete merged.status
-    changes.status = determineStatus(merged)
+    if (existing.prevStatus) {
+      changes.status = existing.prevStatus
+      changes.prevStatus = null
+    } else {
+      const merged = { ...existing, ...changes }
+      delete merged.status
+      changes.status = determineStatus(merged)
+    }
   }
-  // 通常の編集: アーカイブ中のサンプルはアーカイブを維持
-  else if (existing.status === 'アーカイブ' && !('status' in changes)) {
-    // status を変更しない（アーカイブを保持）
+  // 通常の編集: アーカイブ/商品化中のサンプルはステータスを維持
+  else if ((existing.status === 'アーカイブ' || existing.status === '商品化') && !('status' in changes)) {
+    // status を変更しない
   }
   // 通常の編集: ステータスに影響する項目が変わったら再計算
   else if ('requestDate' in changes || 'receiveDate' in changes || 'note' in changes) {
