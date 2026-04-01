@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react'
 
-const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '対応不可', 'アーカイブ']
+const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '商品化', '対応不可', 'アーカイブ']
 
 const CSV_COLUMNS = [
   { key: 'status', label: 'ステータス' },
@@ -24,6 +24,7 @@ const STATUS_STYLES = {
   '未到着': 'bg-danger-bg text-danger',
   '依頼準備中': 'bg-warn-bg text-warn',
   '到着済': 'bg-success-bg text-success',
+  '商品化': 'bg-accent-glow text-accent',
   '対応不可': 'bg-card text-text-muted',
   'アーカイブ': 'bg-card text-text-muted opacity-60',
 }
@@ -385,6 +386,14 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                           到着
                         </button>
                       )}
+                      {sample.status === '到着済' && (
+                        <button
+                          onClick={() => onStatusChange(sample.id, { status: '商品化' })}
+                          className="text-xs px-2.5 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                        >
+                          商品化
+                        </button>
+                      )}
                       {sample.status !== 'アーカイブ' ? (
                         <button
                           onClick={() => onStatusChange(sample.id, { status: 'アーカイブ' })}
@@ -497,6 +506,14 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
                     className="text-xs px-3 py-1.5 rounded-lg bg-success-bg text-success hover:bg-success/20 transition-colors"
                   >
                     到着
+                  </button>
+                )}
+                {sample.status === '到着済' && (
+                  <button
+                    onClick={() => onStatusChange(sample.id, { status: '商品化' })}
+                    className="text-xs px-3 py-1.5 rounded-lg bg-accent-glow text-accent hover:bg-accent/20 transition-colors"
+                  >
+                    商品化
                   </button>
                 )}
                 {sample.status !== 'アーカイブ' ? (

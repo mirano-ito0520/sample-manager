@@ -8,8 +8,9 @@ function Dashboard({ samples }) {
     const notArrived = activeSamples.filter(s => s.status === '未到着').length
     const preparing = activeSamples.filter(s => s.status === '依頼準備中').length
     const arrived = activeSamples.filter(s => s.status === '到着済').length
+    const commercialized = activeSamples.filter(s => s.status === '商品化').length
     const total = activeSamples.length
-    return { notArrived, preparing, arrived, total }
+    return { notArrived, preparing, arrived, commercialized, total }
   }, [activeSamples])
 
   const recentSamples = useMemo(() => {
@@ -43,7 +44,7 @@ function Dashboard({ samples }) {
       {/* Status summary cards */}
       <section>
         <h2 className="text-sm font-medium text-text-sub mb-3">ステータス概要</h2>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="bg-danger-bg border border-danger/20 rounded-xl p-4">
             <div className="text-2xl mb-1">🔴</div>
             <div className="text-danger text-2xl font-bold">{stats.notArrived}</div>
@@ -58,6 +59,11 @@ function Dashboard({ samples }) {
             <div className="text-2xl mb-1">🟢</div>
             <div className="text-success text-2xl font-bold">{stats.arrived}</div>
             <div className="text-success/70 text-sm">到着済</div>
+          </div>
+          <div className="bg-accent-glow border border-accent/20 rounded-xl p-4">
+            <div className="text-2xl mb-1">🎉</div>
+            <div className="text-accent text-2xl font-bold">{stats.commercialized}</div>
+            <div className="text-accent/70 text-sm">商品化</div>
           </div>
           <div className="bg-card border border-border rounded-xl p-4">
             <div className="text-2xl mb-1">📦</div>
