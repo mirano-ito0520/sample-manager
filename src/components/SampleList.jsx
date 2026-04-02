@@ -1,4 +1,5 @@
-import { useState, useMemo, useEffect, useCallback } from 'react'
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react'
+import { utils, writeFile } from 'xlsx'
 
 const STATUS_OPTIONS = ['全て', '未到着', '依頼準備中', '到着済', '商品化', '対応不可', 'アーカイブ']
 
@@ -169,28 +170,20 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
     }
   }
 
-  const exportCsv = useCallback(() => {
-    if (filteredSamples.length === 0) return
+  const [showExportMenu, setShowExportMenu] = useState(false)
+  const exportMenuRef = useRef(null)
 
-    const escCsv = (val) => {
-      const s = String(val ?? '')
-      if (s.includes(',') || s.includes('"') || s.includes('\n')) {
-        return `"${s.replace(/"/g, '""')}"`
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(e.target)) {
+        setShowExportMenu(false)
       }
-      return s
     }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
-    const header = CSV_COLUMNS.map(c => c.label).join(',')
-    const rows = filteredSamples.map(sample =>
-      CSV_COLUMNS.map(c => escCsv(sample[c.key])).join(',')
-    )
-    const bom = '\uFEFF'
-    const csv = bom + header + '\n' + rows.join('\n')
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
+  const getExportFileName = useCallback((ext) => {
     const now = new Date()
     const ts = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,'0')}${String(now.getDate()).padStart(2,'0')}`
     const filterLabel = [
@@ -198,12 +191,64 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
       manufacturerFilter !== '全て' ? manufacturerFilter : '',
       brandFilter !== '全て' ? brandFilter : '',
     ].filter(Boolean).join('_')
-    a.download = `サンプル一覧_${filterLabel || '全件'}_${ts}.csv`
+    return `サンプル一覧_${filterLabel || '全件'}_${ts}.${ext}`
+  }, [statusFilter, manufacturerFilter, brandFilter])
+
+  const downloadBlob = useCallback((blob, filename) => {
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-  }, [filteredSamples, statusFilter, manufacturerFilter, brandFilter])
+  }, [])
+
+  useEffect(() => {
+    if (filteredSamples.length === 0) setShowExportMenu(false)
+  }, [filteredSamples.length])
+
+  const exportAs = useCallback((format) => {
+    if (filteredSamples.length === 0) return
+    setShowExportMenu(false)
+
+    const EXPORT_COLS = CSV_COLUMNS
+
+    if (format === 'csv') {
+      const escCsv = (val) => {
+        const s = String(val ?? '')
+        if (s.includes(',') || s.includes('"') || s.includes('\n')) return `"${s.replace(/"/g, '""')}"`
+        return s
+      }
+      const header = EXPORT_COLS.map(c => c.label).join(',')
+      const rows = filteredSamples.map(s => EXPORT_COLS.map(c => escCsv(s[c.key])).join(','))
+      const csv = '\uFEFF' + header + '\n' + rows.join('\n')
+      downloadBlob(new Blob([csv], { type: 'text/csv;charset=utf-8' }), getExportFileName('csv'))
+    }
+
+    if (format === 'xlsx') {
+      const data = filteredSamples.map(s => {
+        const row = {}
+        EXPORT_COLS.forEach(c => { row[c.label] = s[c.key] ?? '' })
+        return row
+      })
+      const ws = utils.json_to_sheet(data)
+      const wb = utils.book_new()
+      utils.book_append_sheet(wb, ws, 'サンプル一覧')
+      writeFile(wb, getExportFileName('xlsx'))
+    }
+
+    if (format === 'md') {
+      const header = '| ' + EXPORT_COLS.map(c => c.label).join(' | ') + ' |'
+      const sep = '| ' + EXPORT_COLS.map(() => '---').join(' | ') + ' |'
+      const rows = filteredSamples.map(s =>
+        '| ' + EXPORT_COLS.map(c => String(s[c.key] ?? '').replace(/\|/g, '｜').replace(/\n/g, ' ')).join(' | ') + ' |'
+      )
+      const md = `# サンプル一覧\n\n${header}\n${sep}\n${rows.join('\n')}\n`
+      downloadBlob(new Blob([md], { type: 'text/markdown;charset=utf-8' }), getExportFileName('md'))
+    }
+  }, [filteredSamples, getExportFileName, downloadBlob])
 
   return (
     <div className="space-y-4 animate-fade-in">
@@ -288,17 +333,26 @@ function SampleList({ samples, onEdit, onStatusChange, onDelete, onCreateRevisio
             >
               受取日{sortKey === 'receiveDate' ? (sortAsc ? '↑' : '↓') : ''}
             </button>
-            <button
-              onClick={exportCsv}
-              disabled={filteredSamples.length === 0}
-              className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
-                filteredSamples.length === 0
-                  ? 'border-border text-text-muted cursor-not-allowed'
-                  : 'border-success text-success bg-success-bg hover:bg-success/20'
-              }`}
-            >
-              CSV出力
-            </button>
+            <div className="relative" ref={exportMenuRef}>
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={filteredSamples.length === 0}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors ${
+                  filteredSamples.length === 0
+                    ? 'border-border text-text-muted cursor-not-allowed'
+                    : 'border-success text-success bg-success-bg hover:bg-success/20'
+                }`}
+              >
+                出力 ▾
+              </button>
+              {showExportMenu && (
+                <div className="absolute right-0 top-full mt-1 bg-card border border-border rounded-lg shadow-lg z-20 min-w-[140px]">
+                  <button onClick={() => exportAs('xlsx')} className="w-full text-left px-4 py-2.5 text-sm text-text-main hover:bg-card-hover transition-colors rounded-t-lg">Excel (.xlsx)</button>
+                  <button onClick={() => exportAs('md')} className="w-full text-left px-4 py-2.5 text-sm text-text-main hover:bg-card-hover transition-colors">Markdown (.md)</button>
+                  <button onClick={() => exportAs('csv')} className="w-full text-left px-4 py-2.5 text-sm text-text-main hover:bg-card-hover transition-colors rounded-b-lg">CSV (.csv)</button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
